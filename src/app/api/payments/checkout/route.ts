@@ -9,9 +9,6 @@ import { Payment } from '@/models/Review'
 import * as dns from 'dns'
 dns.setServers(['1.1.1.1'])
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-04-10' })
-
-// POST /api/payments/checkout — create Stripe checkout session
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -34,13 +31,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Already enrolled in this course' }, { status: 409 })
     }
 
-    // Free course — enroll directly
-    if (course.price === 0) {
-      await Enrollment.create({ user: user.id, course: courseId, amountPaid: 0 })
+    // Free course — enroll directly without Stripe
+    if (course.price === 0 || course.discountPrice === 0) {
+      await Enrollment.create({ 
+        user: user.id, 
+        course: courseId, 
+        amountPaid: 0,
+        currency: course.currency || 'usd',
+        status: 'active',
+        progress: 0,
+        lastAccessedAt: new Date()
+      })
       await Course.findByIdAndUpdate(courseId, { $inc: { enrollmentCount: 1 } })
-      return NextResponse.json({ url: `/dashboard/courses/${course.slug}` })
+      return NextResponse.json({ 
+        url: `/dashboard/courses/${course.slug}`,
+        message: 'Enrolled successfully!'
+      })
     }
 
+    // Paid course — check for Stripe key
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json({ error: 'Payment system not configured' }, { status: 503 })
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2024-04-10' })
     const price = course.discountPrice ?? course.price
 
     // Create Stripe session
