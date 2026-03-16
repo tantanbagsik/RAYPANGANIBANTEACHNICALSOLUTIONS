@@ -129,7 +129,7 @@ function AdminCoursesContent() {
             <h1 className="font-sora font-bold text-2xl mb-1">Course <span className="gradient-text">Manager</span></h1>
             <p className="text-gray-400 text-sm">Manage all courses on the platform</p>
           </div>
-          <Link href="/admin/courses/new" className="btn-primary flex items-center gap-2 w-fit">
+          <Link href="/admin/courses/new-form" className="btn-primary flex items-center gap-2 w-fit">
             <Plus className="w-4 h-4" /> Create Course
           </Link>
         </div>
