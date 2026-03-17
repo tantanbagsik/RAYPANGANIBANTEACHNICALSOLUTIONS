@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
-import { Menu, X, ChevronDown, LogOut, LayoutDashboard, BookOpen, Settings } from 'lucide-react'
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, BookOpen, Settings, ShoppingCart } from 'lucide-react'
+import { useCart } from '@/context/CartContext'
 
 const navLinks = [
   { href: '/#courses', label: 'Courses' },
@@ -17,6 +18,7 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const { getItemCount } = useCart()
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20)
@@ -25,6 +27,7 @@ export function Navbar() {
   }, [])
 
   const user = session?.user as any
+  const cartCount = getItemCount()
 
   return (
     <nav
