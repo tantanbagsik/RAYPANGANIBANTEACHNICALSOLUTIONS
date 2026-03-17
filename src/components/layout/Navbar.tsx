@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
-import { Menu, X, ChevronDown, LogOut, LayoutDashboard, BookOpen, Settings, ShoppingCart } from 'lucide-react'
+import { Menu, X, ChevronDown, LogOut, LayoutDashboard, BookOpen, Settings, ShoppingCart, Zap, Plus } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 
 const navLinks = [
@@ -18,6 +18,7 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [userPoints, setUserPoints] = useState(0)
   const { getItemCount } = useCart()
 
   useEffect(() => {
@@ -25,6 +26,20 @@ export function Navbar() {
     window.addEventListener('scroll', handler)
     return () => window.removeEventListener('scroll', handler)
   }, [])
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch('/api/points')
+        .then(res => res.json())
+        .then(data => setUserPoints(data.points || 0))
+        .catch(console.error)
+    }
+  }, [session])
+
+  useEffect(() => {
+    setUserMenuOpen(false)
+    setMobileOpen(false)
+  }, [pathname])
 
   const user = session?.user as any
   const cartCount = getItemCount()
@@ -65,11 +80,30 @@ export function Navbar() {
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-52 bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50">
                     <div className="px-4 py-3 border-b border-border">
                       <p className="text-xs text-gray-500">Signed in as</p>
                       <p className="text-sm font-medium truncate">{user?.email}</p>
                     </div>
+                    
+                    {/* Points Display */}
+                    <div className="px-4 py-3 bg-gradient-to-r from-yellow-400/10 to-orange-400/10 border-b border-border">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Zap className="w-4 h-4 text-yellow-400" />
+                          <span className="text-sm text-gray-400">Points Balance</span>
+                        </div>
+                        <span className="font-bold text-yellow-400">{userPoints.toLocaleString()}</span>
+                      </div>
+                      <Link 
+                        href="/topup" 
+                        onClick={() => setUserMenuOpen(false)}
+                        className="mt-2 flex items-center justify-center gap-1 text-xs bg-yellow-400/20 text-yellow-400 py-1.5 rounded-lg hover:bg-yellow-400/30 transition-colors"
+                      >
+                        <Plus className="w-3 h-3" /> Top Up Points
+                      </Link>
+                    </div>
+
                     <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-border hover:text-white transition-colors" onClick={() => setUserMenuOpen(false)}>
                       <LayoutDashboard className="w-4 h-4" /> Dashboard
                     </Link>
@@ -115,6 +149,19 @@ export function Navbar() {
           ))}
           {session ? (
             <>
+              {/* Points in mobile */}
+              <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-yellow-400/10 to-orange-400/10 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-yellow-400" />
+                  <span className="text-gray-400">Points</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-yellow-400">{userPoints.toLocaleString()}</span>
+                  <Link href="/topup" onClick={() => setMobileOpen(false)} className="text-xs bg-yellow-400/20 text-yellow-400 px-2 py-1 rounded-lg">
+                    + Top Up
+                  </Link>
+                </div>
+              </div>
               <Link href="/dashboard" className="block nav-link py-2" onClick={() => setMobileOpen(false)}>Dashboard</Link>
               <button onClick={() => signOut({ callbackUrl: '/' })} className="block text-red-400 text-sm py-2">Sign Out</button>
             </>
