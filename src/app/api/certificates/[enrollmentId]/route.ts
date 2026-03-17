@@ -11,6 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { enrollmentId
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = session.user as any
 
     await connectDB()
 
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: { enrollmentId
       return NextResponse.json({ error: 'Enrollment not found' }, { status: 404 })
     }
 
-    if ((enrollment.user as any)._id.toString() !== session.user.id) {
+    if ((enrollment.user as any)._id.toString() !== user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
