@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -23,7 +23,7 @@ export default function CertificatePage() {
   const params = useParams()
   const [certificate, setCertificate] = useState<CertificateData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [generating, setGenerating] = useState(false)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -36,6 +36,12 @@ export default function CertificatePage() {
       fetchCertificate()
     }
   }, [status, params.enrollmentId])
+
+  useEffect(() => {
+    if (certificate && canvasRef.current) {
+      drawCertificate()
+    }
+  }, [certificate])
 
   const fetchCertificate = async () => {
     try {
@@ -51,28 +57,116 @@ export default function CertificatePage() {
     }
   }
 
-  const handleDownload = async () => {
-    setGenerating(true)
-    const element = document.getElementById('certificate-content')
-    if (!element) return
+  const drawCertificate = () => {
+    const canvas = canvasRef.current
+    if (!canvas || !certificate) return
 
-    try {
-      const html2canvas = (await import('html2canvas')).default
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#1a1a2e'
-      })
-      
-      const link = document.createElement('a')
-      link.download = `certificate-${certificate?.course.title.replace(/\s+/g, '-').toLowerCase()}.png`
-      link.href = canvas.toDataURL('image/png')
-      link.click()
-    } catch (error) {
-      console.error('Error generating certificate:', error)
-    } finally {
-      setGenerating(false)
-    }
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const width = 1200
+    const height = 850
+    canvas.width = width
+    canvas.height = height
+
+    const gradient = ctx.createLinearGradient(0, 0, width, height)
+    gradient.addColorStop(0, '#1a1a2e')
+    gradient.addColorStop(0.5, '#16213e')
+    gradient.addColorStop(1, '#1a1a2e')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, width, height)
+
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.3)'
+    ctx.lineWidth = 3
+    ctx.strokeRect(30, 30, width - 60, height - 60)
+
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.15)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(50, 50, width - 100, height - 100)
+
+    ctx.fillStyle = '#fbbf24'
+    ctx.beginPath()
+    ctx.arc(width / 2, 100, 40, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.fillStyle = '#1a1a2e'
+    ctx.font = 'bold 40px serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('★', width / 2, 115)
+
+    ctx.fillStyle = '#fbbf24'
+    ctx.font = '16px sans-serif'
+    ctx.letterSpacing = '5px'
+    ctx.fillText('CERTIFICATE OF COMPLETION'.toUpperCase(), width / 2, 200)
+
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 48px serif'
+    ctx.fillText(certificate.user.name, width / 2, 300)
+
+    ctx.fillStyle = '#9ca3af'
+    ctx.font = '18px sans-serif'
+    ctx.fillText('has successfully completed', width / 2, 360)
+
+    const titleFont = certificate.course.title.length > 40 ? 'bold 28px serif' : 'bold 36px serif'
+    ctx.fillStyle = '#a78bfa'
+    ctx.font = titleFont
+    ctx.fillText(certificate.course.title, width / 2, 430)
+
+    ctx.strokeStyle = '#8b5cf6'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(400, 460)
+    ctx.lineTo(800, 460)
+    ctx.stroke()
+
+    ctx.fillStyle = '#9ca3af'
+    ctx.font = '16px sans-serif'
+    ctx.fillText(`Instructed by ${certificate.course.instructor.name}`, width / 2, 510)
+
+    const completionDate = new Date(certificate.completedAt).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+
+    ctx.fillStyle = '#9ca3af'
+    ctx.font = '14px sans-serif'
+    ctx.fillText('Date', width / 2 - 150, 650)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 16px sans-serif'
+    ctx.fillText(completionDate, width / 2 - 150, 680)
+
+    ctx.fillStyle = '#9ca3af'
+    ctx.font = '14px sans-serif'
+    ctx.fillText('Category', width / 2 + 150, 650)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 16px sans-serif'
+    ctx.fillText(certificate.course.category, width / 2 + 150, 680)
+
+    ctx.fillStyle = '#fbbf24'
+    ctx.font = 'bold 20px serif'
+    ctx.fillText('Raypanganiban', width / 2, 780)
+
+    ctx.beginPath()
+    ctx.moveTo(width / 2 - 100, 760)
+    ctx.lineTo(width / 2 + 100, 760)
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.5)'
+    ctx.lineWidth = 1
+    ctx.stroke()
+
+    ctx.fillStyle = '#22c55e'
+    ctx.font = '12px sans-serif'
+    ctx.fillText('● Verified', width - 100, 60)
+  }
+
+  const handleDownload = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const link = document.createElement('a')
+    link.download = `certificate-${certificate?.course.title.replace(/\s+/g, '-').toLowerCase()}.png`
+    link.href = canvas.toDataURL('image/png')
+    link.click()
   }
 
   if (status === 'loading' || loading) {
@@ -117,16 +211,13 @@ export default function CertificatePage() {
               <ArrowLeft className="w-5 h-5" />
               <span>Back to Courses</span>
             </Link>
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={handleDownload}
-                disabled={generating}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary rounded-lg font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Download
-              </button>
-            </div>
+            <button 
+              onClick={handleDownload}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-secondary rounded-lg font-medium text-sm hover:opacity-90 transition-opacity"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </button>
           </div>
 
           <div className="text-center mb-10">
@@ -139,65 +230,11 @@ export default function CertificatePage() {
           </div>
 
           <div className="flex justify-center">
-            <div 
-              id="certificate-content"
-              className="relative w-full max-w-4xl aspect-[1.4/1] bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#1a1a2e] rounded-xl overflow-hidden"
-              style={{
-                boxShadow: '0 0 60px rgba(139, 92, 246, 0.3), 0 0 120px rgba(59, 130, 246, 0.1)'
-              }}
-            >
-              <div className="absolute inset-0 border-2 border-[#fbbf24]/30 rounded-xl m-4" />
-              <div className="absolute inset-0 border border-[#fbbf24]/10 rounded-xl m-6" />
-
-              <div className="absolute top-8 left-0 right-0 flex justify-center">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#fbbf24] to-[#f59e0b] flex items-center justify-center" style={{ boxShadow: '0 0 30px rgba(251, 191, 36, 0.5)' }}>
-                  <Award className="w-10 h-10 text-dark" />
-                </div>
-              </div>
-
-              <div className="absolute top-32 left-0 right-0 text-center">
-                <p className="text-[#fbbf24] uppercase tracking-[0.3em] text-sm font-medium">Certificate of Completion</p>
-                <h2 className="text-white font-sora font-bold text-3xl mt-3 px-8">
-                  {certificate.user.name}
-                </h2>
-                <p className="text-gray-400 mt-4 text-sm">has successfully completed</p>
-              </div>
-
-              <div className="absolute top-[240px] left-0 right-0 text-center px-8">
-                <div className="inline-block">
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-primary via-purple-400 to-secondary bg-clip-text text-transparent">
-                    {certificate.course.title}
-                  </h3>
-                  <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-3" />
-                </div>
-                <p className="text-gray-400 mt-4 text-sm">
-                  Instructed by <span className="text-white font-medium">{certificate.course.instructor.name}</span>
-                </p>
-              </div>
-
-              <div className="absolute bottom-24 left-0 right-0 flex justify-center gap-16">
-                <div className="text-center">
-                  <p className="text-gray-500 text-xs uppercase tracking-wider">Date</p>
-                  <p className="text-white font-medium mt-1">{completionDate}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-gray-500 text-xs uppercase tracking-wider">Course Category</p>
-                  <p className="text-white font-medium mt-1">{certificate.course.category}</p>
-                </div>
-              </div>
-
-              <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-4">
-                <div className="text-center">
-                  <div className="w-32 h-px bg-[#fbbf24]/50" />
-                  <p className="text-[#fbbf24] text-xs mt-2 font-sora">Raypanganiban</p>
-                </div>
-              </div>
-
-              <div className="absolute top-8 right-8 flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-green-400 text-xs">Verified</span>
-              </div>
-            </div>
+            <canvas 
+              ref={canvasRef} 
+              className="w-full max-w-4xl aspect-[1.4/1] rounded-xl"
+              style={{ boxShadow: '0 0 60px rgba(139, 92, 246, 0.3), 0 0 120px rgba(59, 130, 246, 0.1)' }}
+            />
           </div>
 
           <div className="mt-10 text-center">
