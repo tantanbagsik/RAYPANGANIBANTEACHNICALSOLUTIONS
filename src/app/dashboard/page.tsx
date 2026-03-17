@@ -5,7 +5,7 @@ import { connectDB } from '@/lib/mongodb'
 import Enrollment from '@/models/Enrollment'
 import { Navbar } from '@/components/layout/Navbar'
 import Link from 'next/link'
-import { BookOpen, Clock, Trophy, TrendingUp, ChevronRight } from 'lucide-react'
+import { BookOpen, Clock, Trophy, TrendingUp, ChevronRight, Award } from 'lucide-react'
 
 export const metadata = { title: 'Dashboard' }
 
