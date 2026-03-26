@@ -6,9 +6,54 @@ import Enrollment from '@/models/Enrollment'
 import User from '@/models/User'
 import { Navbar } from '@/components/layout/Navbar'
 import Link from 'next/link'
-import { BookOpen, Clock, Trophy, TrendingUp, ChevronRight, Award, Zap } from 'lucide-react'
+import { BookOpen, Clock, Trophy, TrendingUp, ChevronRight, Award, Zap, MessageSquare } from 'lucide-react'
 
-export const metadata = { title: 'Dashboard' }
+export const metadata = {
+  title: 'Dashboard | E-Learning Platform',
+  description: 'Track your learning progress, courses, certificates, and achievements in our interactive dashboard',
+  keywords: 'learning dashboard, course progress, learning analytics, education platform'
+}
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "Your E-Learning Platform",
+  "url": "https://your-platform.com",
+  "description": "Learn new skills with our extensive course library",
+  "sameAs": ["https://twitter.com/yourplatform", "https://facebook.com/yourplatform"]
+};
+  const pageSchema = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOccupationalProgram",
+    "name": "Student Dashboard",
+    "description": "Track your learning progress, courses, certificates, and achievements in our interactive dashboard",
+    "inLanguage": "en",
+    "learningResourceType": "Mixed Media"
+  };
+  
+  const userProgressSchema = {
+    "@context": "https://schema.org",
+    "@type": "Learner",
+    "name": user.name,
+    "pointsBalance": userPoints,
+    "learningProgress": stats.avgProgress,
+    "numberOfAchievements": stats.completed,
+    "inLanguage": "en"
+  };
+
+  const courseSchema = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "name": enrollments.map(e => e.course?.title).join(", "),
+    "provider": {
+      "@type": "EducationalOrganization",
+      "name": "Your E-Learning Platform"
+    }
+  };
+
+
+
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -35,8 +80,10 @@ export default async function DashboardPage() {
       : 0,
   }
 
-  return (
-    <>
+return (
+  <>
+  <main role="region" aria-labelledby="dashboard-main-heading">
+    <h1 id="dashboard-main-heading" className="visually-hidden">Dashboard Page</h1>
       <Navbar />
       <div className="min-h-screen bg-dark pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -68,9 +115,9 @@ export default async function DashboardPage() {
           </div>
 
           {/* Continue Learning */}
-          <div className="mb-10">
+          <div className="mb-10" itemscope itemtype="https://schema.org/ItemList">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="font-sora font-bold text-xl">Continue Learning</h2>
+              <h2 className="font-sora font-bold text-xl" itemprop="name">Continue Learning</h2>
               <Link href="/dashboard/courses" className="text-primary text-sm hover:underline flex items-center gap-1">
                 View all <ChevronRight className="w-4 h-4" />
               </Link>
@@ -88,7 +135,7 @@ export default async function DashboardPage() {
                 {enrollments.slice(0, 6).map((e: any) => (
                   <Link key={e._id} href={`/dashboard/courses/${e.course?.slug}`} className="glow-card overflow-hidden group">
                     <div className="h-36 bg-gradient-to-br from-primary/30 to-secondary/20 flex items-center justify-center">
-                      <span className="text-4xl">📖</span>
+                      <span className="text-4xl" aria-label="Course Content">📖</span>
                     </div>
                     <div className="p-4">
                       <span className="badge text-primary border-primary/30 bg-primary/10 text-xs mb-2 inline-flex">{e.course?.category}</span>
@@ -109,16 +156,31 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          {/* Quick actions */}
-          <div className="glow-card p-6">
-            <h2 className="font-sora font-bold text-lg mb-4">Quick Actions</h2>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/courses" className="btn-outline text-sm">Browse Courses</Link>
-              <Link href="/dashboard/certificates" className="btn-outline text-sm">My Certificates</Link>
-              <Link href="/topup" className="btn-outline text-sm text-yellow-400 border-yellow-400/30 hover:border-yellow-400">Top Up Points</Link>
-              <Link href="/dashboard/settings" className="btn-outline text-sm">Account Settings</Link>
-            </div>
-          </div>
+           {/* Quick actions */}
+           <div className="glow-card p-6">
+             <h2 className="font-sora font-bold text-lg mb-4">Quick Actions</h2>
+             <div className="flex flex-wrap gap-3">
+               <Link href="/courses" className="btn-outline text-sm">Browse Courses</Link>
+               <Link href="/dashboard/certificates" className="btn-outline text-sm">My Certificates</Link>
+               <Link href="/topup" className="btn-outline text-sm text-yellow-400 border-yellow-400/30 hover:border-yellow-400">Top Up Points</Link>
+               <Link href="/dashboard/settings" className="btn-outline text-sm">Account Settings</Link>
+             </div>
+           </div>
+
+           {/* Recent Support Chats */}
+           <div className="mt-10">
+             <h2 className="font-sora font-bold text-lg mb-4 flex items-center gap-2">
+               <MessageSquare className="w-5 h-5 text-primary" />
+               Recent Support
+             </h2>
+             <div id="recent-chats-loading" className="text-center py-8">
+               <div className="animate-spin rounded-full w-8 h-8 border-b-2 border-primary mx-auto mb-4"></div>
+               <p className="text-gray-400">Loading your chats...</p>
+             </div>
+              <div id="recent-chats-content" className="space-y-4 hidden">
+                {/* Chats will be inserted here by JavaScript */}
+              </div>
+           </div>
         </div>
       </div>
     </>
