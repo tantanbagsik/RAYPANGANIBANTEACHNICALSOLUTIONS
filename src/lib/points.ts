@@ -1,5 +1,6 @@
 import { connectDB } from '@/lib/mongodb'
 import User from '@/models/User'
+import mongoose from 'mongoose'
 
 /**
  * Award points to a user for various actions
