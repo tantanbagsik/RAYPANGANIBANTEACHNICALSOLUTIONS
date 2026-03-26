@@ -48,6 +48,7 @@ function LoginForm() {
           <div className="flex gap-3 mb-6">
             {[
               { provider: 'google', label: 'Google', icon: 'G' },
+              { provider: 'facebook', label: 'Facebook', icon: 'f' },
               { provider: 'github', label: 'GitHub', icon: '⌥' },
             ].map(({ provider, label, icon }) => (
               <button key={provider} onClick={() => handleOAuth(provider)}
