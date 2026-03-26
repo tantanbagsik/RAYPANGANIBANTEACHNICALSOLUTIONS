@@ -54,7 +54,10 @@ function verifyWebhook(payload: string, headers: WebhookHeaders): { valid: boole
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text();
-    const headers = request.headers;
+    const headers: WebhookHeaders = {
+      'x-hub-signature-256': request.headers.get('x-hub-signature-256') || undefined,
+      'x-webhook-token': request.headers.get('x-webhook-token') || undefined,
+    };
 
     if (!verifyWebhook(rawBody, headers)) {
       return NextResponse.json(
@@ -82,8 +85,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export const config = {
-  api: {
-    bodyParser: false
-  }
-};
+export const dynamic = 'force-dynamic';
