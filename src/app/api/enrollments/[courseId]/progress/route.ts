@@ -8,8 +8,9 @@ import Course from '@/models/Course'
 // POST /api/enrollments/[courseId]/progress
 export async function POST(
   req: NextRequest,
-  { params }: { params: { courseId: string } }
+  { params }: { params: Promise<{ courseId: string }> }
 ) {
+  const { courseId } = await params
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -19,7 +20,7 @@ export async function POST(
 
     await connectDB()
 
-    const enrollment = await Enrollment.findOne({ user: user.id, course: params.courseId })
+    const enrollment = await Enrollment.findOne({ user: user.id, course: courseId })
     if (!enrollment) return NextResponse.json({ error: 'Not enrolled' }, { status: 403 })
 
     // Update or add lesson progress
@@ -44,7 +45,7 @@ export async function POST(
     }
 
     // Recalculate overall progress
-    const course = await Course.findById(params.courseId).lean() as any
+    const course = await Course.findById(courseId).lean() as any
     if (course && course.totalLessons > 0) {
       const completedCount = enrollment.lessonsProgress.filter(
         (lp: any) => lp.completedAt

@@ -5,7 +5,8 @@ import { connectDB } from '@/lib/mongodb'
 import Enrollment from '@/models/Enrollment'
 import User from '@/models/User'
 
-export async function GET(req: NextRequest, { params }: { params: { enrollmentId: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ enrollmentId: string }> }) {
+  const { enrollmentId } = await params
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user) {
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { enrollmentId
 
     await connectDB()
 
-    const enrollment = await Enrollment.findById(params.enrollmentId)
+    const enrollment = await Enrollment.findById(enrollmentId)
       .populate({
         path: 'course',
         select: 'title category instructor',

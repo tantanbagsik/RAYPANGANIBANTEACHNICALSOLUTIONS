@@ -7,7 +7,8 @@ import Enrollment from '@/models/Enrollment'
 import * as dns from 'dns'
 dns.setServers(['1.1.1.1'])
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     const session = await getServerSession(authOptions)
     const user = session?.user as any
@@ -17,16 +18,16 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     await connectDB()
 
-    const course = await Course.findById(params.id)
+    const course = await Course.findById(id)
     if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
 
     // Delete associated enrollments
-    await Enrollment.deleteMany({ course: params.id })
+    await Enrollment.deleteMany({ course: id })
 
     // Delete the course
-    await Course.findByIdAndDelete(params.id)
+    await Course.findByIdAndDelete(id)
 
     return NextResponse.json({ message: 'Course deleted successfully' })
   } catch (error) {
@@ -35,7 +36,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   }
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     const session = await getServerSession(authOptions)
     const user = session?.user as any
@@ -45,7 +47,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     await connectDB()
 
-    const course = await Course.findById(params.id).populate('instructor', 'name email').lean()
+    const course = await Course.findById(id).populate('instructor', 'name email').lean()
     if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
@@ -67,7 +69,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   try {
     const session = await getServerSession(authOptions)
     const user = session?.user as any
@@ -80,7 +83,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     await connectDB()
 
-    const course = await Course.findById(params.id)
+    const course = await Course.findById(id)
     if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 })
     }
@@ -95,7 +98,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const totalLessons = sections?.reduce((acc: number, s: any) => acc + (s.lessons?.length || 0), 0) || course.totalLessons
 
-    const updatedCourse = await Course.findByIdAndUpdate(params.id, {
+    const updatedCourse = await Course.findByIdAndUpdate(id, {
       ...(title && { title }),
       ...(slug && { slug }),
       ...(description && { description }),

@@ -7,12 +7,13 @@ import Enrollment from '@/models/Enrollment'
 import { Review } from '@/models/Review'
 
 // GET /api/courses/[slug]
-export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   try {
     await connectDB()
     const session = await getServerSession(authOptions)
 
-    const course = await Course.findOne({ slug: params.slug })
+    const course = await Course.findOne({ slug: slug })
       .populate('instructor', 'name image bio')
       .lean()
 
@@ -56,14 +57,15 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
 }
 
 // PATCH /api/courses/[slug] — update course
-export async function PATCH(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const user = session.user as any
 
     await connectDB()
-    const course = await Course.findOne({ slug: params.slug })
+    const course = await Course.findOne({ slug: slug })
     if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 })
 
     const isOwner = course.instructor.toString() === user.id
@@ -82,14 +84,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { slug: stri
 }
 
 // DELETE /api/courses/[slug]
-export async function DELETE(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const user = session.user as any
 
     await connectDB()
-    const course = await Course.findOne({ slug: params.slug })
+    const course = await Course.findOne({ slug: slug })
     if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 })
 
     if (course.instructor.toString() !== user.id && user.role !== 'admin') {
