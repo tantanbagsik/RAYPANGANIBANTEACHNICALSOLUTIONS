@@ -19,11 +19,15 @@
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.9.0",
     "clsx": "^2.1.1",
+    "crypto": "^1.0.1",
     "date-fns": "^3.6.0",
     "dotenv": "^17.3.1",
+    "express": "^4.22.1",
+    "express-rate-limit": "^8.3.1",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.400.0",
     "mongoose": "^8.4.1",
-    "next": "14.2.5",
+    "next": "^16.2.1",
     "next-auth": "^4.24.7",
     "react": "^18",
     "react-dom": "^18",
@@ -38,12 +42,26 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "autoprefixer": "^10.4.19",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.5",
-    "postcss": "^8.4.39",
-    "tailwindcss": "^3.4.1",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^16.2.1",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^3.4.19",
     "tsx": "^4.16.2",
-    "typescript": "^5"
-  }
+    "typescript": "^5.9.3"
+  },
+  "description": "A production-ready e-learning platform built with **Next.js 14**, **MongoDB**, **NextAuth**, and **Stripe**.",
+  "main": "debug-mongodb.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tantanbagsik/Programming.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/tantanbagsik/Programming/issues"
+  },
+  "homepage": "https://github.com/tantanbagsik/Programming#readme"
 }
